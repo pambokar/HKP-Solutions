@@ -1,58 +1,65 @@
 //
 //  ContentView.swift
-//  WeSplit
+//  GuessTheFlag
 //
-//  Created by Pranesh Ambokar on 12/22/20.
+//  Created by Pranesh Ambokar on 12/23/20.
 //
 
 import SwiftUI
 
 struct ContentView: View {
-    @State private var checkAmount = ""
-    @State private var numberOfPeople = 2
-    @State private var tipPercentage = 2
+    @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
+    @State private var correctAnswer = Int.random(in: 0...2)
     
-    let tipPercentages = [10, 15, 20, 25, 0]
-    
-    var totalPerPerson: Double {
-        let peopleCount = Double(numberOfPeople + 2)
-        let tipSelection = Double(tipPercentages[tipPercentage])
-        let orderAmount = Double(checkAmount) ?? 0
-        
-        let tipValue = orderAmount / 100 * tipSelection
-        let grandTotal = orderAmount + tipValue
-        let amountPerPerson = grandTotal / peopleCount
-        
-        return amountPerPerson
-    }
+    @State private var showingScore = false
+    @State private var scoreTitle = ""
     var body: some View {
-        NavigationView{
-        Form{
-            Section {
-                TextField("Amount", text: $checkAmount)
-                    .keyboardType(.decimalPad)
-                Picker("Number of people", selection: $numberOfPeople){
-                    ForEach(2..<100){
-                    Text("\($0) people")
+        ZStack {
+            LinearGradient(gradient: Gradient(colors: [.blue, .black]), startPoint: .top, endPoint: .bottom).edgesIgnoringSafeArea(.all)
+            VStack(spacing: 30){
+                VStack {
+                    Text("Tap the flag of")
+                        .foregroundColor(.white)
+                    Text(countries[correctAnswer])
+                        .foregroundColor(.white)
+                        .font(.largeTitle)
+                        .fontWeight(.black)
+                }
+                
+                ForEach(0..<3) { number in
+                    Button(action: {
+                        self.flagTapped(number)
+                    }) {
+                        Image(self.countries[number])
+                            .renderingMode(.original)
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(Color.black, lineWidth: 1))
+                            .shadow(color: .black, radius: 2)
                     }
                 }
+                Spacer()
             }
-            
-            Section(header: Text("How much tip do you want to leave?")){
-                Picker("Tip percentage", selection: $tipPercentage) {
-                    ForEach(0 ..< tipPercentages.count){
-                        Text("\(self.tipPercentages[$0])%")
-                    }
-                }
-                .pickerStyle(SegmentedPickerStyle())
-            }
-            
-            Section (header: Text("Amount per person")) { //I added the header because I thought it looked better
-                Text("$\(totalPerPerson, specifier: "%.2f")")
+            .alert(isPresented: $showingScore) {
+                Alert(title: Text(scoreTitle), message: Text("Your score is ???"), dismissButton: .default(Text("Continue")) {
+                        self.askQuestion()
+                })
             }
         }
-        .navigationBarTitle("WeSplit")
+    }
+    
+    func flagTapped(_ number: Int) {
+        if number == correctAnswer {
+            scoreTitle = "correct"
+        } else {
+            scoreTitle = "wrong"
         }
+        
+        showingScore = true
+    }
+    
+    func askQuestion() {
+        countries.shuffle()
+        correctAnswer = Int.random(in: 0...2)
     }
 }
 
